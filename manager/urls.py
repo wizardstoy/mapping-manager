@@ -21,7 +21,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 import settings
 
-urlpatterns = patterns('metocean_manager.views',
+urlpatterns = patterns('manager.views',
     url(r'^$', 'tasks'),
     url(r'^new/(?P<status>(draft|proposed|approved|broken|deprecated))/$', 
         'new', name='new'),
