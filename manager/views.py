@@ -87,6 +87,7 @@ def edit(request, status):
             'status' : 'Status: %s' % status,
             'title' : 'Edit Shard: %s' % shard,
             'detail' : 'Shard: %s' % shard,
+            'newshard' : reverse('new', kwargs={'status' : status})
             'form' : form,
             'read_only' : READ_ONLY,
             'prefix_lookup' : mark_safe(
