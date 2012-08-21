@@ -34,8 +34,12 @@
 
 </head>
 <body>
-<h1><a href="/metocean_manager/" class="top">MetOcean Manager {% block heading1 %}{% endblock %}</a></h1>
-<h2>{% block heading2 %}{% endblock %}</h2>
+<h1><a href="{% url tasks %}" class="top">MetOcean Manager {% block viewname %}{% endblock %}</a></h1>
+<div class="toplistbar">
+<h3 class="listbar">{% block status %}{{ status }}{% endblock %}</h3>
+<h3 class="listbar">{% block count %}{{ count }}{% endblock %}</h3>
+<h3 class="listbar">{% block detail %}{{ detail }}{% endblock %}</h3>
+</div>
 
 <div id="content">
 {% block content %}{% endblock %}

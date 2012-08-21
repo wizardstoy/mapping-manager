@@ -22,7 +22,7 @@ from django.conf.urls.defaults import patterns, include, url
 import settings
 
 urlpatterns = patterns('manager.views',
-    url(r'^$', 'tasks'),
+    url(r'^$', 'tasks', name='tasks'),
     url(r'^new/(?P<status>(draft|proposed|approved|broken|deprecated))/$', 
         'new', name='new'),
     url(r'^edit/(?P<status>(draft|proposed|approved|broken|deprecated))/$', 

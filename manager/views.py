@@ -83,9 +83,10 @@ def edit(request, status):
         form = forms.ShardForm(current_status=status)
     return render_to_response('main.html',
         RequestContext(request, {
-            'heading1' : mark_safe('Edit Shard<br/>%s' % source),
-            'heading2' : shard,
-            'title' : shard,
+            'viewname' : 'Edit Shard',
+            'status' : 'Status: %s' % status,
+            'title' : 'Edit Shard: %s' % shard,
+            'detail' : 'Shard: %s' % shard,
             'form' : form,
             'read_only' : READ_ONLY,
             'prefix_lookup' : mark_safe(
@@ -117,15 +118,16 @@ def shard_bulk_load(request):
     # CSV file upload and report in column view for validation
     pass
 
-def get_counts_by_graph():
+def get_counts_by_graph(graphurl=''):
     qstr = '''
         SELECT ?g (COUNT(DISTINCT ?s) as ?count)
         WHERE {
             GRAPH ?g { ?s ?p ?o } .
+            FILTER( REGEX(str(?g), '%s') ) .
         }
         GROUP by ?g
         ORDER by ?g
-    ''' 
+    ''' % graphurl
     results = query.run_query(qstr)
     return results
 
@@ -135,9 +137,12 @@ def count_by_group(results, keyfunc):
         uniquetype[k] = reduce(lambda x,y: int(x) + int(y), [x.get('count') for x in g], 0)
     return uniquetype
 
+def split_by_datatype(name):
+    return name.split('.')[0]
+
 def split_by_type(item):
     name = item.get('g').split('/')[3]
-    return name.split('.')[0]
+    return split_by_datatype(name)
 
 def split_by_status(item):
     name = item.get('g').split('/')[2]
@@ -180,17 +185,21 @@ def list(request, status):
     count_results = get_counts_by_graph()
     status_resultsd = count_by_group(count_results, split_by_status)
     for item in results:
-        url = reverse('listtype', kwargs={'status' : status, 'datatype' : split_by_localname(item) })
+        url = reverse('listtype', kwargs={
+            'status' : status, 
+            'datatype' : split_by_localname(item) })
         itemlist.append({
             'url'   : url, 
             'label' : '%s' % item.get('g'), 
-            'count' : count_by_group(count_results, lambda x:x.get('g')).get(item.get('g')),
+            'count' : count_by_group(count_results, 
+                lambda x:x.get('g')).get(item.get('g')),
         })
     return render_to_response('lists.html',
         RequestContext(request, {
-            'title' : '%s Types: %s records' % (status.upper(), status_resultsd.get(status)),
+            'title' : status.upper(),
             'itemlist' : sorted(itemlist, key=lambda x:x['label']),
             'read_only' : READ_ONLY,
+            'count' : 'Records: %s' % status_resultsd.get(status),
             }) )
 
 def listtype(request, status, datatype):
@@ -206,6 +215,7 @@ def listtype(request, status, datatype):
         ORDER BY ?subject
     ''' % graph
     results = query.run_query(qstr)
+    type_resultsd = count_by_group(get_counts_by_graph(datatype), split_by_type)
     itemlist = []
     for item in [x.get('subject') for x in results]:
         itemlist.append({
@@ -217,11 +227,13 @@ def listtype(request, status, datatype):
         })
     return render_to_response('main.html',
         RequestContext(request, {
-            'title' : 'Listing Status: %s' % status,
-            'heading1' : 'Listing Status: %s' % status,
-            'heading2' : 'Datatype: %s' % datatype,
+            'title' : 'Listing %s' % status,
+            'viewname' : 'Listing',
+            'status' : 'Status: %s' % status.upper(),
+            'detail' : 'Datatype: %s' % datatype,
             'itemlist' : itemlist,
             'read_only' : READ_ONLY,
+            'count' : 'Records: %s' % type_resultsd.get(split_by_datatype(datatype))
             }) )
     pass
 

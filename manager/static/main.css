@@ -20,6 +20,12 @@ div.task {
 height: 100%;    
 }
 
+h2.listbar , h3.listbar
+{
+display: inline;
+padding-right: 2em;
+}
+
 a.listbar , div.listbar
 {
 display: inline;
