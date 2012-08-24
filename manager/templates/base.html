@@ -34,7 +34,7 @@
 
 </head>
 <body>
-<h1><a href="{% url tasks %}" class="top">MetOcean Manager {% block viewname %}{% endblock %}</a></h1>
+<h1><a href="{% url tasks %}" class="top">MetOcean Manager {% block viewname %}{{ viewname }}{% endblock %}</a></h1>
 <div class="toplistbar">
 <h3 class="listbar">{% block status %}{{ status }}{% endblock %}</h3>
 <h3 class="listbar">{% block count %}{{ count }}{% endblock %}</h3>

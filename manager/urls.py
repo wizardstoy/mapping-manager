@@ -23,13 +23,13 @@ import settings
 
 urlpatterns = patterns('manager.views',
     url(r'^$', 'tasks', name='tasks'),
-    url(r'^new/(?P<status>(draft|proposed|approved|broken|deprecated))/$', 
-        'new', name='new'),
-    url(r'^edit/(?P<status>(draft|proposed|approved|broken|deprecated))/$', 
-        'edit', name='edit'),
     url(r'^list/(?P<status>(draft|proposed|approved|broken|deprecated))/$',
         'list', name='list'),
     url(r'^list/(?P<status>(draft|proposed|approved|broken|deprecated))/(?P<datatype>[^/]+)/$',
         'listtype', name='listtype'),
+    url(r'^new/(?P<status>(draft|proposed|approved|broken|deprecated))/(?P<datatype>[^/]+)/$', 
+        'new', name='new'),
+    url(r'^edit/(?P<status>(draft|proposed|approved|broken|deprecated))/(?P<datatype>[^/]+)/$', 
+        'edit', name='edit'),
     url(r'^search/$', 'search', name='search'),
 )

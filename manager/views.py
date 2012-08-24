@@ -54,9 +54,9 @@ def provenances(request):
     # report in column view
     pass
 
-def new(request, status):
+def new(request, status, datatype):
     if request.method == 'POST':
-        form = forms.ShardForm(request.POST)
+        form = forms.ShardForm(request.POST, current_status=status)
         if form.is_valid():
             pass
     else:
@@ -67,46 +67,48 @@ def new(request, status):
             'form' : form,
             }) )
 
-def edit(request, status):
+def edit(request, status, datatype):
     shard = request.GET.get('ref', '')
-    source = request.GET.get('source', '')
     shard = urllib.unquote(shard).decode('utf8')
-    source = urllib.unquote(source).decode('utf8')
-    ushardm = get_shard(shard, status, source)
+    # will need to call custom code here for different types?
+    ushardm = get_shard(shard, status, datatype)
+    print '>>>>', ushardm
+    formlist = []
     if request.method == 'POST':
         form = forms.ShardForm(request.POST, current_status=status)
         if form.is_valid():
-            pass
+            formlist.append( form )
         else:
-            pass 
+            formlist.append( form )
+            print form.errors
     else:
-        form = forms.ShardForm(current_status=status)
+        for item in ushardm:
+            formlist.append( forms.ShardForm(current_status=status) )
     return render_to_response('main.html',
         RequestContext(request, {
             'viewname' : 'Edit Shard',
-            'status' : 'Status: %s' % status,
+            'status' : 'Status: %s' % status.upper(),
             'title' : 'Edit Shard: %s' % shard,
             'detail' : 'Shard: %s' % shard,
-            'newshard' : reverse('new', kwargs={'status' : status})
-            'form' : form,
+            'formlist' : formlist,
             'read_only' : READ_ONLY,
             'prefix_lookup' : mark_safe(
                 ','.join(["'%s'" % x for x in prefixes.Prefixes().irilist])),
             }) )
 
-def get_shard(shard, status, source):
-    print '2>>>>', shard, status
+# what shall we do here for multiple cfnames?
+def get_shard(shard, status, datatype):
     qstr = '''
-        SELECT ?cfname ?unit ?canon_unit ?longname
-        WHERE {
-            <%s> cf:units ?unit .
-            <%s> cf:name ?cfname .
-            ?cfname cf:description ?long_name .
-            ?cfname cf:canonical_units ?canon_unit .
-            # need a term in here to match stash2cf valid_to versions ???
-            # when comparing it to the source graph version
-        }
-    ''' % (shard, shard)
+    SELECT DISTINCT ?cfname ?unit ?canon_unit ?long_name
+    WHERE
+    {
+        <%s> cf:units ?unit ;
+                cf:name ?cfname ;
+                (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+        ?cfname cf:description ?long_name ;
+                cf:canonical_units ?canon_unit .
+    } 
+    ''' % (shard, )
     results = query.run_query(qstr)
     return results
 
@@ -198,6 +200,8 @@ def list(request, status):
     return render_to_response('lists.html',
         RequestContext(request, {
             'title' : status.upper(),
+            'viewname' : 'List',
+            'status' : 'status: %s' % status.upper(),
             'itemlist' : sorted(itemlist, key=lambda x:x['label']),
             'read_only' : READ_ONLY,
             'count' : 'Records: %s' % status_resultsd.get(status),
@@ -221,22 +225,21 @@ def listtype(request, status, datatype):
     for item in [x.get('subject') for x in results]:
         itemlist.append({
             'url'   : url_with_querystring(
-                        reverse('edit', kwargs={'status' : status}),
-                        ref=item,
-                        source=graph),
+                        reverse('edit', kwargs={'status' : status, 'datatype' : datatype}),
+                        ref=item),
             'label' : item,
         })
     return render_to_response('main.html',
         RequestContext(request, {
-            'title' : 'Listing %s' % status,
+            'title' : 'Listing %s' % status.upper(),
             'viewname' : 'Listing',
             'status' : 'Status: %s' % status.upper(),
             'detail' : 'Datatype: %s' % datatype,
             'itemlist' : itemlist,
             'read_only' : READ_ONLY,
-            'count' : 'Records: %s' % type_resultsd.get(split_by_datatype(datatype))
+            'count' : 'Records: %s' % type_resultsd.get(split_by_datatype(datatype)),
+            'newshard' : reverse('new', kwargs={'status' : status, 'datatype' : datatype}),
             }) )
-    pass
 
 def search(request):
     pass

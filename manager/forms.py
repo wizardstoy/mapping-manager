@@ -51,4 +51,6 @@ class ShardForm(forms.ModelForm):
     def clean(self):
         if READ_ONLY:
             raise ValidationError('System in Read-Only mode') 
+        else:
+            return self.cleaned_data
 

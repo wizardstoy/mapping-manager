@@ -66,11 +66,13 @@ class StateTransition(models.Model):
 
 class BaseShard(models.Model):
     '''represents the linkage between Standard Name and a sub-classed RDF type'''
-    metadata_element = models.URLField(verify_exists=False) # popup of all known namespaces
+    metadata_element = models.URLField(verify_exists=False, null=True, blank=True) 
+        # popup of all known namespaces
     current_status = models.ForeignKey(State) # default of Draft
-    standard_name = models.CharField(max_length=100)
-    unit = models.CharField(max_length=50)
-    long_name = models.CharField(max_length=350)
+    standard_name = models.CharField(max_length=100, null=True, blank=True)
+    unit = models.CharField(max_length=50, null=True, blank=True)
+    long_name = models.CharField(max_length=350, null=True, blank=True)
+    reference_link = models.ForeignKey('self', null=True, blank=True)
 
     # and field to set NEXT valid state
 
@@ -81,7 +83,7 @@ class BaseShard(models.Model):
 
 class STASHShard(BaseShard):
     def __init__(self, *args, **kwargs):
-        self.metadata_element = 'http://reference.metoffice.gov.uk/data/stash#'
+        self.metadata_element = 'http://reference.metoffice.gov.uk/data/stash/'
         super(BaseShard, self).__init__(*args, **kwargs)
 
     def valid_for_transition(self):
@@ -90,7 +92,7 @@ class STASHShard(BaseShard):
 
 class FieldCodeShard(BaseShard):
     def __init__(self, *args, **kwargs):
-        self.metadata_element = 'http://reference.metoffice.gov.uk/data/fieldcode#'
+        self.metadata_element = 'http://reference.metoffice.gov.uk/data/fieldcode/'
         super(BaseShard, self).__init__(*args, **kwargs)
 
     def valid_for_transition(self):

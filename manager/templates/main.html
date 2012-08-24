@@ -68,11 +68,12 @@ $(document).ready(function(){
 </script>
 
 {% endblock %}
-{% block viewname %}{{ viewname }}{% endblock %}
 
 {% block content %}
 
-{% if form %}
+{% if formlist %}
+
+{% for form in formlist %}
 
 <form action="" method="post">
 {% csrf_token %}
@@ -81,7 +82,9 @@ $(document).ready(function(){
 </table>
 <input type="submit" {% if read_only %}disabled="disabled"{% endif %} value="Submit"/>
 </form>
+<br />
 
+{% endfor %}
 
 {% else %}
 
