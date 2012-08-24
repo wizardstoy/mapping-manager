@@ -3,9 +3,12 @@
 import StringIO
 
 
-class Prefixes(object):
-
-    prefixd = {
+class Prefixes(dict):
+    __slots__ = []
+    
+    def __init__(self):
+        #super(Prefixes, self).__init__()
+        prefixd = {
         'iso19135' : 'http://reference.metoffice.gov.uk/data/wmo/def/iso19135/',
         'metExtra' : 'http://reference.metoffice.gov.uk/data/wmo/def/met/',
         'rdfs'     : 'http://www.w3.org/2000/01/rdf-schema#',
@@ -16,12 +19,16 @@ class Prefixes(object):
         'mon'      : 'http://reference.metoffice.gov.uk/data/none/',
         'fcode'    : 'http://www-hc/~umdoc/pp_package_ibm_docs/fcodes/',
         'cf'       : 'http://cf-pcmdi.llnl.gov/documents/',
-    }
+        }
+        self.update(prefixd)
+
+    def __getattr__(self, key):
+        return self[key]
 
     @property
     def sparql(self):
         ios = StringIO.StringIO()
-        for key, value in sorted(self.prefixd.items()):
+        for key, value in sorted(self.items()):
             ios.write('PREFIX %s: <%s>\n' % (key, value))
         ios.write('\n')
         return ios.getvalue()
@@ -29,7 +36,7 @@ class Prefixes(object):
     @property
     def turtle(self):
         ios = StringIO.StringIO()
-        for key, value in sorted(self.prefixd.items()):
+        for key, value in sorted(self.items()):
             ios.write('@prefix %s: <%s> .\n' % (key, value))
         ios.write('\n')
         return ios.getvalue()
@@ -37,13 +44,17 @@ class Prefixes(object):
     @property
     def rdf(self):
         ios = StringIO.StringIO()
-        for key, value in sorted(self.prefixd.items()):
+        for key, value in sorted(self.items()):
             ios.write('xmlns:%s="%s"\n' % (key, value))
         ios.write('\n')
         return ios.getvalue()
 
     @property
     def irilist(self):
-        return sorted(self.prefixd.values())
+        return sorted(self.values())
+
+    @property
+    def prefixlist(self):
+        return sorted(self.keys())
 
 
