@@ -66,17 +66,17 @@ $(document).ready(function(){
 
 {% if formset %}
 
-{% for form in formset %}
 <form action="" method="post">
+{% for form in formset %}
 {% csrf_token %}
 {{ formset.management_form }}
 <table>
 {{ form.as_table }}
 </table>
 <input type="submit" {% if read_only %}disabled="disabled"{% endif %} value="Submit"/>
-</form>
 <br />
 {% endfor %}
+</form>
 
 {% else %}
 

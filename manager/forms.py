@@ -47,7 +47,7 @@ class ShardForm(forms.ModelForm):
         self.fields['current_status'] = forms.CharField(max_length=15)
         if self.initial.has_key('metadata_element'):
             self.fields['metadata_element'].widget.attrs['readonly'] = True
-            self.fields['metadata_element'].widget.attrs['disabled'] = "disabled"
+            #self.fields['metadata_element'].widget.attrs['disabled'] = "disabled"
         self.fields['current_status'].widget.attrs['readonly'] = True
         states = State()
         self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])

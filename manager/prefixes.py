@@ -26,6 +26,11 @@ class Prefixes(dict):
     def __getattr__(self, key):
         return self[key]
 
+    def value2key(self, value):
+        for k, v in self.items():
+           if v == value:
+                return k 
+
     @property
     def sparql(self):
         ios = StringIO.StringIO()

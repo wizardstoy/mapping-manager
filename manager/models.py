@@ -75,8 +75,8 @@ class StateTransition(object):
 class BaseShard(models.Model):
     '''represents the linkage between Standard Name and a sub-classed RDF type'''
     metadata_element = models.CharField(
-        null=False, blank=False, 
-        max_length=100, choices=[(x,x) for x,x in enumerate(prefixes.Prefixes().datalist)]) 
+        null=True, blank=True, 
+        max_length=100, choices=[(x,y) for x,y in prefixes.Prefixes().items()]) 
         # popup of all known namespaces
     local_name = models.CharField(max_length=40)
     current_status = models.CharField(max_length=15)
@@ -90,28 +90,10 @@ class BaseShard(models.Model):
         #raise NotImplementedError
         pass
 
-
-class STASHShard(BaseShard):
-    def __init__(self, *args, **kwargs):
-        self.metadata_element = 'http://reference.metoffice.gov.uk/data/stash/'
-        super(BaseShard, self).__init__(*args, **kwargs)
-
-    def valid_for_transition(self):
-        pass
-
-
-class FieldCodeShard(BaseShard):
-    def __init__(self, *args, **kwargs):
-        self.metadata_element = 'http://reference.metoffice.gov.uk/data/fieldcode/'
-        super(BaseShard, self).__init__(*args, **kwargs)
-
-    def valid_for_transition(self):
-        pass
-
-
 class Contacts(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
+    watcher = models.BooleanField(default=True)
 
 class Provenance(models.Model):
     last_edit = models.DateTimeField(auto_now=True)
@@ -119,6 +101,9 @@ class Provenance(models.Model):
     version = models.CharField(max_length=20)
     comment = models.CharField(max_length=200)
     reason = models.CharField(max_length=50)
+    previous = models.ForeignKey('self')
+    date = models.DateTimeField(auto_now=True)
+    mapping = models.ForeignKey(BaseShard)
     
 
 class ProvenanceContacts(models.Model):

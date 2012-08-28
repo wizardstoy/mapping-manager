@@ -38,6 +38,7 @@ from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.utils.safestring import mark_safe
 from django.forms.formsets import formset_factory
+from django.forms.models import inlineformset_factory
 
 def contact(request, contact_id):
     pass
@@ -79,8 +80,16 @@ def newshard(request, status, datatype):
 def edit(request, status, datatype):
     shard = request.GET.get('ref', '')
     shard = urllib.unquote(shard).decode('utf8')
+    state = models.State(state=status)
+    paths = shard.split('/')
+    prefix = '/'.join(paths[:-1]) + '/'
+    localname = paths[-1]
+    pre = prefixes.Prefixes()
+    md_element = pre.value2key(prefix)
+
     # will we need to call custom code here for different types?
     ShardFormSet = formset_factory(forms.ShardForm, extra=0)
+    warning_msg = ''
     if request.method == 'POST':
         formset = ShardFormSet(request.POST)
         if formset.is_valid():
@@ -89,22 +98,15 @@ def edit(request, status, datatype):
             print formset.errors
     else:
         ushardm = get_shard(shard, status, datatype)
-        warning_msg = ''
         if len(ushardm) > 1:
             warning_msg = (
                 'Warning: '
-                'More than one Data Shard found with same name at %s status' % status.upper())
-
-        state = models.State(state=status)
-        paths = shard.split('/')
-        prefix = '/'.join(paths[:-1]) + '/'
-        localname = paths[-1]
-
+                'More than one Data Shard with the same name at status "%s" found.' % status.upper())
         initial_data_set = []
         for item in ushardm:
             data_set = {}
             data_set = dict(
-                metadata_element = prefix,
+                metadata_element = md_element,
                 local_name = localname,
                 current_status = state,
                 standard_name = item.get('cfname'),
