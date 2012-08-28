@@ -76,7 +76,7 @@ class BaseShard(models.Model):
     '''represents the linkage between Standard Name and a sub-classed RDF type'''
     metadata_element = models.CharField(
         null=True, blank=True, 
-        max_length=100, choices=[(x,y) for x,y in prefixes.Prefixes().items()]) 
+        max_length=100, choices=[(x,y) for x,y in prefixes.Prefixes().datalist]) 
         # popup of all known namespaces
     local_name = models.CharField(max_length=40)
     current_status = models.CharField(max_length=15)
@@ -95,16 +95,15 @@ class Contacts(models.Model):
     email = models.EmailField()
     watcher = models.BooleanField(default=True)
 
-class Provenance(models.Model):
-    last_edit = models.DateTimeField(auto_now=True)
-    owners = models.ManyToManyField(Contacts, through='ProvenanceContacts')
+class Provenance(BaseShard):
+    last_edit = models.DateTimeField()
     version = models.CharField(max_length=20)
     comment = models.CharField(max_length=200)
     reason = models.CharField(max_length=50)
     previous = models.ForeignKey('self')
-    date = models.DateTimeField(auto_now=True)
-    mapping = models.ForeignKey(BaseShard)
-    
+    owners = models.ManyToManyField(Contacts, 
+        through='ProvenanceContacts')
+
 
 class ProvenanceContacts(models.Model):
     provenance = models.ForeignKey(Provenance)

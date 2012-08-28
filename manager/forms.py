@@ -17,7 +17,7 @@
 # along with metOcean-mapping. If not, see <http://www.gnu.org/licenses/>.
 
 
-from models import BaseShard, State
+from models import BaseShard, State, Provenance
 
 import prefixes
 
@@ -35,12 +35,6 @@ class BulkLoadForm(forms.Form):
 class ShardForm(forms.ModelForm):
     class Meta:
         model = BaseShard
-        widgets = {
-            'current_status' : forms.TextInput(attrs={'size' : 60}),
-            'standard_name' : forms.TextInput(attrs={'size' : 60}),
-            'local_name' : forms.TextInput(attrs={'size' : 60}),
-            'long_name' : forms.TextInput(attrs={'size' : 60}),
-        }
 
     def __init__(self, *args, **kwargs):
         super(ShardForm, self).__init__(*args, **kwargs)
@@ -61,4 +55,23 @@ class ShardForm(forms.ModelForm):
             raise ValidationError('System in Read-Only mode') 
         else:
             return self.cleaned_data
+
+
+class ProvenanceForm(forms.ModelForm):
+    class Meta:
+        model = Provenance
+        widgets = {
+            'current_status' : forms.TextInput(attrs={'size' : 60}),
+            'standard_name' : forms.TextInput(attrs={'size' : 60}),
+            'local_name' : forms.TextInput(attrs={'size' : 60}),
+            'long_name' : forms.TextInput(attrs={'size' : 60}),
+            'comment' : forms.TextInput(attrs={'size' : 60}),
+            'reason' : forms.TextInput(attrs={'size' : 60}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ProvenanceForm, self).__init__(*args, **kwargs)
+        self.fields['owners'].help_text = ''
+        self.fields['last_edit'].widget.attrs['readonly'] = True
+        self.fields['version'].widget.attrs['readonly'] = True
 

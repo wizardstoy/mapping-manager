@@ -23,6 +23,7 @@ import os
 import re
 import urllib
 from itertools import groupby
+import datetime
 
 import forms
 import models
@@ -57,7 +58,7 @@ def provenances(request):
     pass
 
 def newshard(request, status, datatype):
-    ShardFormSet = formset_factory(forms.ShardForm, extra=0)
+    ShardFormSet = formset_factory(forms.ProvenanceForm, extra=0)
     if request.method == 'POST':
         formset = ShardFormSet(request.POST)
         if formset.is_valid():
@@ -66,7 +67,11 @@ def newshard(request, status, datatype):
         shard = request.GET.get('ref', '')
         shard = urllib.unquote(shard).decode('utf8')
 
-        formset = ShardFormSet(initial=[{'current_status' : status.lower()}])
+        formset = ShardFormSet(initial=[
+            {
+            'current_status' : status.lower(),
+            'last_edit' : datetime.datetime.now(),
+            }])
     return render_to_response('main.html',
         RequestContext(request, {
             'title' : 'New shard',
@@ -88,7 +93,7 @@ def edit(request, status, datatype):
     md_element = pre.value2key(prefix)
 
     # will we need to call custom code here for different types?
-    ShardFormSet = formset_factory(forms.ShardForm, extra=0)
+    ShardFormSet = formset_factory(forms.ProvenanceForm, extra=0)
     warning_msg = ''
     if request.method == 'POST':
         formset = ShardFormSet(request.POST)
@@ -132,13 +137,16 @@ def get_shard(shard, status, datatype):
     WHERE
     {
         {
+        # drawing upon stash2cf.ttl as linkage
         <%s> cf:units ?unit ;
                 cf:name ?cfname ;
                 (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+        # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
         }
         UNION
         {
+        # drawing upon stash2cf.ttl as linkage
         <%s> a mon:none ;
                 (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
         BIND( URI(mon:none) as ?cfname ) .

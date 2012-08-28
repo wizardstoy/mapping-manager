@@ -61,7 +61,7 @@ class Prefixes(dict):
 
     @property
     def datalist(self):
-        return sorted([x for x in self.values() if not re.search('#$', x)])
+        return sorted([(x,y) for x,y in self.items() if not re.search('#$', y)])
 
     @property
     def prefixlist(self):
