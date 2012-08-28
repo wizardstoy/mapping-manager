@@ -122,7 +122,7 @@ def edit(request, status, datatype):
     return render_to_response('main.html',
         RequestContext(request, {
             'viewname' : 'Edit Shard',
-            'status' : 'Status: %s' % status.upper(),
+            'status' : 'Status: %s, datatype: %s' % (status.upper(), datatype),
             'title' : 'Edit Shard: %s' % shard,
             'detail' : 'Shard: %s' % shard,
             'formset' : formset,

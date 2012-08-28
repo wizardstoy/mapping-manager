@@ -93,7 +93,11 @@ class BaseShard(models.Model):
 class Contacts(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
-    watcher = models.BooleanField(default=True)
+    watcher = models.BooleanField(default=True, editable=False)
+
+    def __unicode__(self):
+        return u'%s - %s, %s' % (
+            self.name, 'Watcher' if self.watcher else 'Owner', self.email)
 
 class Provenance(BaseShard):
     last_edit = models.DateTimeField()
