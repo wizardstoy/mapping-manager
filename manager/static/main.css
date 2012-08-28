@@ -26,6 +26,11 @@ display: inline;
 padding-right: 2em;
 }
 
+h4.errorbar
+{
+color: red;
+}
+
 a.listbar , div.listbar
 {
 display: inline;

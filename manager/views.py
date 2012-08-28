@@ -56,14 +56,16 @@ def provenances(request):
     pass
 
 def newshard(request, status, datatype):
-    formlist = []
+    ShardFormSet = formset_factory(forms.ShardForm, extra=0)
     if request.method == 'POST':
-        form = forms.ShardForm(request.POST)
-        if form.is_valid():
+        formset = ShardFormSet(request.POST)
+        if formset.is_valid():
             pass
     else:
-        form = forms.ShardForm(initial={'current_status' : status.lower()})
-    formlist.append(form)
+        shard = request.GET.get('ref', '')
+        shard = urllib.unquote(shard).decode('utf8')
+
+        formset = ShardFormSet(initial=[{'current_status' : status.lower()}])
     return render_to_response('main.html',
         RequestContext(request, {
             'title' : 'New shard',
@@ -71,47 +73,54 @@ def newshard(request, status, datatype):
             'status' : 'status: %s' % status.upper(),
             'detail' : 'Datatype: %s' % datatype,
             'read_only' : READ_ONLY,
-            'formlist' : formlist,
+            'formset' : formset,
             }) )
 
 def edit(request, status, datatype):
     shard = request.GET.get('ref', '')
     shard = urllib.unquote(shard).decode('utf8')
     # will we need to call custom code here for different types?
-    ushardm = get_shard(shard, status, datatype)
-    formlist = []
+    ShardFormSet = formset_factory(forms.ShardForm, extra=0)
     if request.method == 'POST':
-        form = forms.ShardForm(request.POST)
-        if form.is_valid():
-            formlist.append( form )
+        formset = ShardFormSet(request.POST)
+        if formset.is_valid():
+            pass
         else:
-            formlist.append( form )
-            print form.errors
+            print formset.errors
     else:
+        ushardm = get_shard(shard, status, datatype)
+        warning_msg = ''
+        if len(ushardm) > 1:
+            warning_msg = (
+                'Warning: '
+                'More than one Data Shard found with same name at %s status' % status.upper())
+
         state = models.State(state=status)
+        paths = shard.split('/')
+        prefix = '/'.join(paths[:-1]) + '/'
+        localname = paths[-1]
+
+        initial_data_set = []
         for item in ushardm:
-            paths = shard.split('/')
-            prefix = '/'.join(paths[:-1]) + '/'
-            localname = paths[-1]
-            shardm = models.BaseShard(
+            data_set = {}
+            data_set = dict(
                 metadata_element = prefix,
+                local_name = localname,
                 current_status = state,
                 standard_name = item.get('cfname'),
                 unit = item.get('unit'),
                 long_name = '')
-            #shardm.save()
-            formlist.append( forms.ShardForm(
-                    instance=shardm,
-                    #initial={'metadata_element' : prefix}
-            ))
+            initial_data_set.append(data_set)
+        formset = ShardFormSet(initial=initial_data_set)
     return render_to_response('main.html',
         RequestContext(request, {
             'viewname' : 'Edit Shard',
             'status' : 'Status: %s' % status.upper(),
             'title' : 'Edit Shard: %s' % shard,
             'detail' : 'Shard: %s' % shard,
-            'formlist' : formlist,
+            'formset' : formset,
             'read_only' : READ_ONLY,
+            'error' : warning_msg,
             }) )
 
 # what shall we do here for multiple cfnames?
@@ -120,12 +129,20 @@ def get_shard(shard, status, datatype):
     SELECT DISTINCT ?cfname ?unit ?canon_unit
     WHERE
     {
+        {
         <%s> cf:units ?unit ;
                 cf:name ?cfname ;
                 (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
         ?cfname cf:canonical_units ?canon_unit .
+        }
+        UNION
+        {
+        <%s> a mon:none ;
+                (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+        BIND( URI(mon:none) as ?cfname ) .
+        }
     } 
-    ''' % (shard, )
+    ''' % (shard, shard)
     results = query.run_query(qstr)
     return results
 
@@ -202,7 +219,7 @@ def list(request, status):
     ''' % (status.lower(), )
     results = query.run_query(reportq)
     itemlist = []
-    count_results = get_counts_by_graph()
+    count_results = get_counts_by_graph('http://%s/' % status.lower())
     status_resultsd = count_by_group(count_results, split_by_status)
     for item in results:
         url = reverse('listtype', kwargs={

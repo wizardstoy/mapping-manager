@@ -23,7 +23,6 @@
 
 {% block head %}
 <script type="text/javascript" src="{{ STATIC_URL }}jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}jquery.autocomplete-min.js"></script>
 <script type="text/javascript">
 
 $(document).ready(function(){
@@ -58,12 +57,6 @@ $(document).ready(function(){
         $('#action').hide()
         $('#search').css('background','');
     }
-
-    var ac = $('#id_metadata_element').autocomplete({
-        lookup: [{{ prefix_lookup }}],
-        width: 600,
-    })
-
 })
 </script>
 
@@ -71,19 +64,18 @@ $(document).ready(function(){
 
 {% block content %}
 
-{% if formlist %}
+{% if formset %}
 
-{% for form in formlist %}
-
+{% for form in formset %}
 <form action="" method="post">
 {% csrf_token %}
+{{ formset.management_form }}
 <table>
 {{ form.as_table }}
 </table>
 <input type="submit" {% if read_only %}disabled="disabled"{% endif %} value="Submit"/>
 </form>
 <br />
-
 {% endfor %}
 
 {% else %}

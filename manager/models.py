@@ -78,6 +78,7 @@ class BaseShard(models.Model):
         null=False, blank=False, 
         max_length=100, choices=[(x,x) for x,x in enumerate(prefixes.Prefixes().datalist)]) 
         # popup of all known namespaces
+    local_name = models.CharField(max_length=40)
     current_status = models.CharField(max_length=15)
     standard_name = models.CharField(max_length=100, null=True, blank=True)
     unit = models.CharField(max_length=50, null=True, blank=True)
