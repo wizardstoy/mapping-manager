@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with metOcean-mapping. If not, see <http://www.gnu.org/licenses/>.
 
+import prefixes
 
 from django.db import models
 
@@ -73,13 +74,14 @@ class StateTransition(object):
 
 class BaseShard(models.Model):
     '''represents the linkage between Standard Name and a sub-classed RDF type'''
-    metadata_element = models.URLField(verify_exists=False, null=True, blank=True) 
+    metadata_element = models.CharField(
+        null=False, blank=False, 
+        max_length=100, choices=[(x,x) for x,x in enumerate(prefixes.Prefixes().datalist)]) 
         # popup of all known namespaces
     current_status = models.CharField(max_length=15)
     standard_name = models.CharField(max_length=100, null=True, blank=True)
     unit = models.CharField(max_length=50, null=True, blank=True)
-    long_name = models.CharField(max_length=350, null=True, blank=True)
-    reference_link = models.ForeignKey('self', null=True, blank=True)
+    long_name = models.CharField(max_length=150, null=True, blank=True)
 
     # and field to set NEXT valid state
 

@@ -19,6 +19,8 @@
 
 from models import BaseShard, State
 
+import prefixes
+
 from settings import READ_ONLY
 from django import forms
 
@@ -34,14 +36,13 @@ class ShardForm(forms.ModelForm):
     class Meta:
         model = BaseShard
         widgets = {
-            'metadata_element' : forms.TextInput(attrs={'size' : 60}),
             'current_status' : forms.TextInput(attrs={'size' : 60}),
             'standard_name' : forms.TextInput(attrs={'size' : 60}),
+            'long_name' : forms.TextInput(attrs={'size' : 60}),
         }
 
     def __init__(self, *args, **kwargs):
         super(ShardForm, self).__init__(*args, **kwargs)
-        self.fields['long_name'] = forms.CharField(widget=forms.Textarea)
         self.fields['current_status'] = forms.CharField(max_length=15)
         if self.instance and self.instance.pk is not None:
             self.fields['metadata_element'].widget.attrs['readonly'] = True

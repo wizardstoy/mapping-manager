@@ -1,6 +1,7 @@
 # Python module to hold the master references for Metadata Translation prefixes
 
 import StringIO
+import re
 
 
 class Prefixes(dict):
@@ -52,6 +53,10 @@ class Prefixes(dict):
     @property
     def irilist(self):
         return sorted(self.values())
+
+    @property
+    def datalist(self):
+        return sorted([x for x in self.values() if not re.search('#$', x)])
 
     @property
     def prefixlist(self):

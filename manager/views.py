@@ -37,6 +37,7 @@ from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
 from django.utils.safestring import mark_safe
+from django.forms.formsets import formset_factory
 
 def contact(request, contact_id):
     pass
@@ -76,7 +77,7 @@ def newshard(request, status, datatype):
 def edit(request, status, datatype):
     shard = request.GET.get('ref', '')
     shard = urllib.unquote(shard).decode('utf8')
-    # will need to call custom code here for different types?
+    # will we need to call custom code here for different types?
     ushardm = get_shard(shard, status, datatype)
     formlist = []
     if request.method == 'POST':
@@ -89,15 +90,20 @@ def edit(request, status, datatype):
     else:
         state = models.State(state=status)
         for item in ushardm:
+            paths = shard.split('/')
+            prefix = '/'.join(paths[:-1]) + '/'
+            localname = paths[-1]
             shardm = models.BaseShard(
-                metadata_element = shard,
+                metadata_element = prefix,
                 current_status = state,
                 standard_name = item.get('cfname'),
                 unit = item.get('unit'),
-                long_name = item.get('long_name'),
-                reference_link = None)
+                long_name = '')
             #shardm.save()
-            formlist.append( forms.ShardForm(instance=shardm) )
+            formlist.append( forms.ShardForm(
+                    instance=shardm,
+                    #initial={'metadata_element' : prefix}
+            ))
     return render_to_response('main.html',
         RequestContext(request, {
             'viewname' : 'Edit Shard',
@@ -106,21 +112,18 @@ def edit(request, status, datatype):
             'detail' : 'Shard: %s' % shard,
             'formlist' : formlist,
             'read_only' : READ_ONLY,
-            'prefix_lookup' : mark_safe(
-                ','.join(["'%s'" % x for x in prefixes.Prefixes().irilist])),
             }) )
 
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):
     qstr = '''
-    SELECT DISTINCT ?cfname ?unit ?canon_unit ?long_name
+    SELECT DISTINCT ?cfname ?unit ?canon_unit
     WHERE
     {
         <%s> cf:units ?unit ;
                 cf:name ?cfname ;
                 (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
-        ?cfname cf:description ?long_name ;
-                cf:canonical_units ?canon_unit .
+        ?cfname cf:canonical_units ?canon_unit .
     } 
     ''' % (shard, )
     results = query.run_query(qstr)
