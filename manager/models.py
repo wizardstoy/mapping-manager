@@ -21,28 +21,36 @@ from django.db import models
 
 # Create your models here.
 
-class State(models.Model):
+class State(object):
     STATES = (
-        (1, 'Draft'),
-        (2, 'Proposed'),
-        (3, 'Approved'),
-        (4, 'Broken'),
-        (5, 'Deprecated'),
+        'Draft',
+        'Proposed',
+        'Approved',
+        'Broken',
+        'Deprecated',
     )
-    state = models.IntegerField(choices=STATES)
 
     def __init__(self, *args, **kwargs):
-        state = kwargs.get('state', 1)
-        super(State, self).__init__(*args, **kwargs)
-        if state in [x[0] for x in self.STATES]:
-            self.state = state
-        else:
-            raise ValueError('state not recognised')
+        state = kwargs.get('state', None)
+        #super(State, self).__init__(*args, **kwargs)
+        self.state = None
+        if state is not None:
+            if state in [x.lower() for x in self.STATES]:
+                self.state = state
+            else:
+                raise Exception('state not recognised')
 
-class StateTransition(models.Model):
-    fromstate = models.ForeignKey(State, related_name='from_state')
-    tostate = models.ForeignKey(State, related_name='to_state')
-    transition_date = models.DateTimeField(auto_now=True)
+    def __repr__(self):
+        return self.state
+
+    @property
+    def get_states(self):
+        return self.STATES
+
+class StateTransition(object):
+    fromstate = None
+    tostate = None
+    transition_date = None
 
     VALID_TRANSITIONS = (
         ('Draft', 'Proposed'),
@@ -57,8 +65,7 @@ class StateTransition(models.Model):
 
     @property
     def has_allowed_transition(self):
-        if (self.fromstate.get_state_display(), 
-            self.tostate.get_state_display()) in self.VALID_TRANSITIONS:
+        if (self.fromstate, self.tostate) in self.VALID_TRANSITIONS:
             return True
         else:
             return False
@@ -68,7 +75,7 @@ class BaseShard(models.Model):
     '''represents the linkage between Standard Name and a sub-classed RDF type'''
     metadata_element = models.URLField(verify_exists=False, null=True, blank=True) 
         # popup of all known namespaces
-    current_status = models.ForeignKey(State) # default of Draft
+    current_status = models.CharField(max_length=15)
     standard_name = models.CharField(max_length=100, null=True, blank=True)
     unit = models.CharField(max_length=50, null=True, blank=True)
     long_name = models.CharField(max_length=350, null=True, blank=True)

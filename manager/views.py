@@ -54,17 +54,23 @@ def provenances(request):
     # report in column view
     pass
 
-def new(request, status, datatype):
+def newshard(request, status, datatype):
+    formlist = []
     if request.method == 'POST':
-        form = forms.ShardForm(request.POST, current_status=status)
+        form = forms.ShardForm(request.POST)
         if form.is_valid():
             pass
     else:
-        form = forms.ShardForm()
+        form = forms.ShardForm(initial={'current_status' : status.lower()})
+    formlist.append(form)
     return render_to_response('main.html',
         RequestContext(request, {
             'title' : 'New shard',
-            'form' : form,
+            'viewname' : 'New shard',
+            'status' : 'status: %s' % status.upper(),
+            'detail' : 'Datatype: %s' % datatype,
+            'read_only' : READ_ONLY,
+            'formlist' : formlist,
             }) )
 
 def edit(request, status, datatype):
@@ -72,18 +78,26 @@ def edit(request, status, datatype):
     shard = urllib.unquote(shard).decode('utf8')
     # will need to call custom code here for different types?
     ushardm = get_shard(shard, status, datatype)
-    print '>>>>', ushardm
     formlist = []
     if request.method == 'POST':
-        form = forms.ShardForm(request.POST, current_status=status)
+        form = forms.ShardForm(request.POST)
         if form.is_valid():
             formlist.append( form )
         else:
             formlist.append( form )
             print form.errors
     else:
+        state = models.State(state=status)
         for item in ushardm:
-            formlist.append( forms.ShardForm(current_status=status) )
+            shardm = models.BaseShard(
+                metadata_element = shard,
+                current_status = state,
+                standard_name = item.get('cfname'),
+                unit = item.get('unit'),
+                long_name = item.get('long_name'),
+                reference_link = None)
+            #shardm.save()
+            formlist.append( forms.ShardForm(instance=shardm) )
     return render_to_response('main.html',
         RequestContext(request, {
             'viewname' : 'Edit Shard',
@@ -159,11 +173,11 @@ def tasks(request):
     state = models.State()
     itemlist = []
     resultsd = count_by_group(get_counts_by_graph(), split_by_status)
-    for item in sorted(state.STATES, key=lambda x: x[0]):
-        name = item[1].lower()
+    for item in state.get_states:
+        name = item.lower()
         itemlist.append( {
             'url' : reverse('list', kwargs={'status' : name}),
-            'label' : item[1], 
+            'label' : item, 
             'count' : resultsd.get(name, 0),
         } )
     return render_to_response('tasks.html',
@@ -238,7 +252,7 @@ def listtype(request, status, datatype):
             'itemlist' : itemlist,
             'read_only' : READ_ONLY,
             'count' : 'Records: %s' % type_resultsd.get(split_by_datatype(datatype)),
-            'newshard' : reverse('new', kwargs={'status' : status, 'datatype' : datatype}),
+            'newshard' : reverse('newshard', kwargs={'status' : status, 'datatype' : datatype}),
             }) )
 
 def search(request):

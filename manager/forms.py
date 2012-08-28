@@ -33,15 +33,21 @@ class BulkLoadForm(forms.Form):
 class ShardForm(forms.ModelForm):
     class Meta:
         model = BaseShard
-        exclude = ('current_status',)
+        widgets = {
+            'metadata_element' : forms.TextInput(attrs={'size' : 60}),
+            'current_status' : forms.TextInput(attrs={'size' : 60}),
+            'standard_name' : forms.TextInput(attrs={'size' : 60}),
+        }
 
     def __init__(self, *args, **kwargs):
-        current_status = kwargs.pop('current_status')
         super(ShardForm, self).__init__(*args, **kwargs)
-        # include but just change widget to readonly CharField instead of FK?
-        self.fields['current_status'] = forms.CharField(initial=current_status, max_length=15)
+        self.fields['long_name'] = forms.CharField(widget=forms.Textarea)
+        self.fields['current_status'] = forms.CharField(max_length=15)
+        if self.instance and self.instance.pk is not None:
+            self.fields['metadata_element'].widget.attrs['readonly'] = True
         self.fields['current_status'].widget.attrs['readonly'] = True
-        self.fields['next_status'] = forms.ChoiceField(choices=State().STATES)
+        states = State()
+        self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])
         if READ_ONLY:
             for fieldname in self.fields:
                 self.fields[fieldname].widget.attrs['readonly'] = True
