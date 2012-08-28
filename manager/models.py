@@ -100,7 +100,6 @@ class Provenance(BaseShard):
     version = models.CharField(max_length=20)
     comment = models.CharField(max_length=200)
     reason = models.CharField(max_length=50)
-    previous = models.ForeignKey('self')
     owners = models.ManyToManyField(Contacts, 
         through='ProvenanceContacts')
 
