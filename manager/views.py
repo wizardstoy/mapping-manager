@@ -87,8 +87,8 @@ def edit(request, status, datatype):
     shard = urllib.unquote(shard).decode('utf8')
     state = models.State(state=status)
     paths = shard.split('/')
-    prefix = '/'.join(paths[:-1]) + '/'
-    localname = paths[-1]
+    prefix = '/'.join(paths[:-2]) + '/'
+    localname = paths[-2]
     pre = prefixes.Prefixes()
     md_element = pre.value2key(prefix)
 
@@ -139,16 +139,16 @@ def get_shard(shard, status, datatype):
         {
         # drawing upon stash2cf.ttl as linkage
         <%s> cf:units ?unit ;
-                cf:name ?cfname ;
-                (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+                cf:name ?cfname .
+                #(metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
         # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
         }
         UNION
         {
         # drawing upon stash2cf.ttl as linkage
-        <%s> a mon:none ;
-                (metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+        <%s> a mon:none .
+                #(metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
         BIND( URI(mon:none) as ?cfname ) .
         }
     } 
