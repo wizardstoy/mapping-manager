@@ -74,12 +74,12 @@ class StateTransition(object):
 
 class BaseShard(models.Model):
     '''represents the linkage between Standard Name and a sub-classed RDF type'''
+    baseshardMD5 = models.CharField(max_length=32) 
     metadata_element = models.CharField(
         null=True, blank=True, 
         max_length=100, choices=[(x,y) for x,y in prefixes.Prefixes().datalist]) 
         # popup of all known namespaces
     local_name = models.CharField(max_length=40)
-    current_status = models.CharField(max_length=15)
     standard_name = models.CharField(max_length=100, null=True, blank=True)
     unit = models.CharField(max_length=50, null=True, blank=True)
     long_name = models.CharField(max_length=150, null=True, blank=True)
@@ -94,23 +94,28 @@ class Contacts(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     watcher = models.BooleanField(default=True, editable=False)
+    joined = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return u'%s - %s, %s' % (
             self.name, 'Watcher' if self.watcher else 'Owner', self.email)
 
 class Provenance(BaseShard):
+    provenanceMD5 = models.CharField(max_length=32) 
     last_edit = models.DateTimeField()
+    current_status = models.CharField(max_length=15)
     version = models.CharField(max_length=20)
     comment = models.CharField(max_length=200)
     reason = models.CharField(max_length=50)
     owners = models.ManyToManyField(Contacts, 
         through='ProvenanceContacts')
+    previous = models.CharField(max_length=32) 
 
 
 class ProvenanceContacts(models.Model):
     provenance = models.ForeignKey(Provenance)
     contact = models.ForeignKey(Contacts)
+
 
 
 

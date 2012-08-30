@@ -133,22 +133,22 @@ def edit(request, status, datatype):
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):
     qstr = '''
-    SELECT DISTINCT ?cfname ?unit ?canon_unit
+    SELECT DISTINCT ?cfname ?unit ?canon_unit 
     WHERE
     {
         {
         # drawing upon stash2cf.ttl as linkage
         <%s> cf:units ?unit ;
-                cf:name ?cfname .
-                #(metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+                cf:name ?cfname ;
+                metExtra:shardID ?hash .
         # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
         }
         UNION
         {
         # drawing upon stash2cf.ttl as linkage
-        <%s> a mon:none .
-                #(metExtra:hasVersion|metExtra:hasPreviousVersion) ?ver .
+        <%s> a mon:none ;
+                metExtra:shardID ?hash .
         BIND( URI(mon:none) as ?cfname ) .
         }
     } 

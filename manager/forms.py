@@ -35,6 +35,7 @@ class BulkLoadForm(forms.Form):
 class ShardForm(forms.ModelForm):
     class Meta:
         model = BaseShard
+        exclude = ('baseshardMD5',)
 
     def __init__(self, *args, **kwargs):
         super(ShardForm, self).__init__(*args, **kwargs)
@@ -42,9 +43,6 @@ class ShardForm(forms.ModelForm):
         if self.initial.has_key('metadata_element'):
             self.fields['metadata_element'].widget.attrs['readonly'] = True
             #self.fields['metadata_element'].widget.attrs['disabled'] = "disabled"
-        self.fields['current_status'].widget.attrs['readonly'] = True
-        states = State()
-        self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])
         if READ_ONLY:
             for fieldname in self.fields:
                 self.fields[fieldname].widget.attrs['readonly'] = True
@@ -60,8 +58,8 @@ class ShardForm(forms.ModelForm):
 class ProvenanceForm(forms.ModelForm):
     class Meta:
         model = Provenance
+        exclude = ('provenanceMD5', 'baseshardMD5', 'owners')
         widgets = {
-            'current_status' : forms.TextInput(attrs={'size' : 60}),
             'standard_name' : forms.TextInput(attrs={'size' : 60}),
             'local_name' : forms.TextInput(attrs={'size' : 60}),
             'long_name' : forms.TextInput(attrs={'size' : 60}),
@@ -71,7 +69,10 @@ class ProvenanceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProvenanceForm, self).__init__(*args, **kwargs)
-        self.fields['owners'].help_text = ''
+        self.fields['current_status'].widget.attrs['readonly'] = True
         self.fields['last_edit'].widget.attrs['readonly'] = True
         self.fields['version'].widget.attrs['readonly'] = True
+        # now need to generate the 'editor', 'owners' and 'watchers' fields
+        states = State()
+        self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])
 
