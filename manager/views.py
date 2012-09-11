@@ -139,16 +139,14 @@ def get_shard(shard, status, datatype):
         {
         # drawing upon stash2cf.ttl as linkage
         <%s> cf:units ?unit ;
-                cf:name ?cfname ;
-                metExtra:shardID ?hash .
+                cf:name ?cfname .
         # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
         }
         UNION
         {
         # drawing upon stash2cf.ttl as linkage
-        <%s> a mon:none ;
-                metExtra:shardID ?hash .
+        <%s> a mon:none .
         BIND( URI(mon:none) as ?cfname ) .
         }
     } 
