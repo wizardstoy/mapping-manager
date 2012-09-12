@@ -264,15 +264,14 @@ def list(request, status):
 
 def listtype(request, status, datatype):
     '''Second level of detail.
-    This view lists the shards actually contained within the named graph.
+    This view lists the shards actually contained within the named graph
+    and display the count.
     '''
     graph = 'http://%s/%s' % (status.lower(), datatype)
     qstr = '''
         SELECT DISTINCT ?subject
         WHERE {
-            GRAPH <%s> {
-                ?subject ?p ?o .
-            }
+            GRAPH <%s> { ?subject ?p ?o } .
             FILTER( ?p != mos:header )
         }
         ORDER BY ?subject
