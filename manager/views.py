@@ -164,6 +164,11 @@ def shard_bulk_load(request):
     pass
 
 def get_counts_by_graph(graphurl=''):
+    '''This query relies on a feature of Jena that is not yet in the official
+    SPARQL v1.1 standard insofar as 'GRAPH ?g' has undetermined behaviour
+    under the standard but Jena interprets and treats the '?g' 
+    just like any other variable.
+    '''
     qstr = '''
         SELECT ?g (COUNT(DISTINCT ?s) as ?count)
         WHERE {
@@ -177,6 +182,7 @@ def get_counts_by_graph(graphurl=''):
     return results
 
 def count_by_group(results, keyfunc):
+    '''perform a grouped-summation based upon the provided callback.'''
     uniquetype = {}
     for k, g in groupby(results, keyfunc):
         uniquetype[k] = reduce(lambda x,y: int(x) + int(y), [x.get('count') for x in g], 0)
@@ -198,6 +204,9 @@ def split_by_localname(item):
     return name
 
 def tasks(request):
+    '''Top-level view.
+    This provides a list of the known 'states' and a count of shards found within each.
+    '''
     state = models.State()
     itemlist = []
     resultsd = count_by_group(get_counts_by_graph(), split_by_status)
@@ -218,6 +227,10 @@ def url_with_querystring(path, **kwargs):
     return path + '?' + urllib.urlencode(kwargs)
 
 def list(request, status):
+    '''First level of detail.
+    This view expands the chosen 'state' and displays all known subgraphs within it,
+    along with counts of shards within each subgraph.
+    '''
     reportq = '''
         SELECT DISTINCT ?g
         WHERE {
@@ -250,6 +263,9 @@ def list(request, status):
             }) )
 
 def listtype(request, status, datatype):
+    '''Second level of detail.
+    This view lists the shards actually contained within the named graph.
+    '''
     graph = 'http://%s/%s' % (status.lower(), datatype)
     qstr = '''
         SELECT DISTINCT ?subject
