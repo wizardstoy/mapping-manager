@@ -116,7 +116,9 @@ def edit(request, status, datatype):
                 current_status = state,
                 standard_name = item.get('cfname'),
                 unit = item.get('unit'),
-                long_name = '')
+                long_name = '',
+                last_edit = item.get('last_edit') or datetime.datetime.now()
+                )
             initial_data_set.append(data_set)
         formset = ShardFormSet(initial=initial_data_set)
     return render_to_response('main.html',
