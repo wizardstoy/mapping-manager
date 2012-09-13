@@ -134,6 +134,8 @@ def edit(request, status, datatype):
 
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):
+    '''This returns the actual shard from the named graph in the triple-store.'''
+    
     qstr = '''
     SELECT DISTINCT ?cfname ?unit ?canon_unit 
     WHERE
@@ -171,6 +173,7 @@ def get_counts_by_graph(graphurl=''):
     under the standard but Jena interprets and treats the '?g' 
     just like any other variable.
     '''
+    
     qstr = '''
         SELECT ?g (COUNT(DISTINCT ?s) as ?count)
         WHERE {
@@ -209,6 +212,7 @@ def tasks(request):
     '''Top-level view.
     This provides a list of the known 'states' and a count of shards found within each.
     '''
+    
     state = models.State()
     itemlist = []
     resultsd = count_by_group(get_counts_by_graph(), split_by_status)
@@ -233,6 +237,7 @@ def list(request, status):
     This view expands the chosen 'state' and displays all known subgraphs within it,
     along with counts of shards within each subgraph.
     '''
+    
     reportq = '''
         SELECT DISTINCT ?g
         WHERE {
@@ -269,6 +274,7 @@ def listtype(request, status, datatype):
     This view lists the shards actually contained within the named graph
     and display the count.
     '''
+    
     graph = 'http://%s/%s' % (status.lower(), datatype)
     qstr = '''
         SELECT DISTINCT ?subject
