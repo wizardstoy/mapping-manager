@@ -56,6 +56,8 @@ class ShardForm(forms.ModelForm):
 
 
 class ProvenanceForm(forms.ModelForm):
+    required_css_class = 'required'
+    error_css_class = 'error'
     class Meta:
         model = Provenance
         exclude = ('provenanceMD5', 'baseshardMD5', 'owners')
