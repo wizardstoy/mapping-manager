@@ -116,7 +116,9 @@ def edit(request, status, datatype):
                 current_status = state,
                 standard_name = item.get('cfname'),
                 unit = item.get('unit'),
-                long_name = '')
+                long_name = '',
+                last_edit = item.get('last_edit') or datetime.datetime.now()
+                )
             initial_data_set.append(data_set)
         formset = ShardFormSet(initial=initial_data_set)
     return render_to_response('main.html',
@@ -132,6 +134,8 @@ def edit(request, status, datatype):
 
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):
+    '''This returns the actual shard from the named graph in the triple-store.'''
+    
     qstr = '''
     SELECT DISTINCT ?cfname ?unit ?canon_unit 
     WHERE
@@ -164,6 +168,12 @@ def shard_bulk_load(request):
     pass
 
 def get_counts_by_graph(graphurl=''):
+    '''This query relies on a feature of Jena that is not yet in the official
+    SPARQL v1.1 standard insofar as 'GRAPH ?g' has undetermined behaviour
+    under the standard but Jena interprets and treats the '?g' 
+    just like any other variable.
+    '''
+    
     qstr = '''
         SELECT ?g (COUNT(DISTINCT ?s) as ?count)
         WHERE {
@@ -177,6 +187,7 @@ def get_counts_by_graph(graphurl=''):
     return results
 
 def count_by_group(results, keyfunc):
+    '''perform a grouped-summation based upon the provided callback.'''
     uniquetype = {}
     for k, g in groupby(results, keyfunc):
         uniquetype[k] = reduce(lambda x,y: int(x) + int(y), [x.get('count') for x in g], 0)
@@ -198,6 +209,10 @@ def split_by_localname(item):
     return name
 
 def tasks(request):
+    '''Top-level view.
+    This provides a list of the known 'states' and a count of shards found within each.
+    '''
+    
     state = models.State()
     itemlist = []
     resultsd = count_by_group(get_counts_by_graph(), split_by_status)
@@ -218,6 +233,11 @@ def url_with_querystring(path, **kwargs):
     return path + '?' + urllib.urlencode(kwargs)
 
 def list(request, status):
+    '''First level of detail.
+    This view expands the chosen 'state' and displays all known subgraphs within it,
+    along with counts of shards within each subgraph.
+    '''
+    
     reportq = '''
         SELECT DISTINCT ?g
         WHERE {
@@ -250,13 +270,16 @@ def list(request, status):
             }) )
 
 def listtype(request, status, datatype):
+    '''Second level of detail.
+    This view lists the shards actually contained within the named graph
+    and display the count.
+    '''
+    
     graph = 'http://%s/%s' % (status.lower(), datatype)
     qstr = '''
         SELECT DISTINCT ?subject
         WHERE {
-            GRAPH <%s> {
-                ?subject ?p ?o .
-            }
+            GRAPH <%s> { ?subject ?p ?o } .
             FILTER( ?p != mos:header )
         }
         ORDER BY ?subject
