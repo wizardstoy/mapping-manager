@@ -110,6 +110,8 @@ def edit(request, status, datatype):
         initial_data_set = []
         for item in ushardm:
             data_set = {}
+            previousurl = item.get('previous')
+            previouslabel = previousurl.split('/')[-1]
             data_set = dict(
                 metadata_element = md_element,
                 local_name = localname,
@@ -117,7 +119,8 @@ def edit(request, status, datatype):
                 standard_name = item.get('cfname'),
                 unit = item.get('unit'),
                 long_name = '',
-                last_edit = item.get('last_edit') or datetime.datetime.now()
+                last_edit = item.get('last_edit') or datetime.datetime.now(),
+                previous = mark_safe("%s" % previouslabel)
                 )
             initial_data_set.append(data_set)
         formset = ShardFormSet(initial=initial_data_set)
@@ -137,13 +140,16 @@ def get_shard(shard, status, datatype):
     '''This returns the actual shard from the named graph in the triple-store.'''
     
     qstr = '''
-    SELECT DISTINCT ?cfname ?unit ?canon_unit 
+    SELECT DISTINCT ?previous ?cfname ?unit ?canon_unit 
     WHERE
     {
         {
         # drawing upon stash2cf.ttl as linkage
         <%s> cf:units ?unit ;
                 cf:name ?cfname .
+        ?map a <%s> .
+        ?link a ?map .
+        ?link metExtra:hasPrevious ?previous .
         # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
         }
@@ -151,10 +157,13 @@ def get_shard(shard, status, datatype):
         {
         # drawing upon stash2cf.ttl as linkage
         <%s> a mon:none .
+        ?map a <%s> .
+        ?link a ?map .
+        ?link metExtra:hasPrevious ?previous .
         BIND( URI(mon:none) as ?cfname ) .
         }
     } 
-    ''' % (shard, shard)
+    ''' % (shard, shard, shard, shard)
     results = query.run_query(qstr)
     return results
 

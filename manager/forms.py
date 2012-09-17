@@ -23,7 +23,17 @@ import prefixes
 
 from settings import READ_ONLY
 from django import forms
+from string import Template
+from django.utils.safestring import mark_safe
 
+class URLwidget(forms.TextInput):
+    def render(self, name, value, attrs=None):
+        prefix = self.attrs.get('prefix', '')
+        if value in ('None', None):
+            tpl = value
+        else:
+            tpl = u'<a href="%s%s">%s</a>' % (prefix, value, value)
+        return mark_safe(tpl)
 
 class BulkLoadForm(forms.Form):
     file = forms.FileField(
@@ -60,7 +70,7 @@ class ProvenanceForm(forms.ModelForm):
     error_css_class = 'error'
     class Meta:
         model = Provenance
-        exclude = ('provenanceMD5', 'baseshardMD5', 'owners')
+        exclude = ('provenanceMD5', 'baseshardMD5', 'owners', 'version' )
         widgets = {
             'standard_name' : forms.TextInput(attrs={'size' : 60}),
             'local_name' : forms.TextInput(attrs={'size' : 60}),
@@ -71,9 +81,13 @@ class ProvenanceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProvenanceForm, self).__init__(*args, **kwargs)
+        pre = prefixes.Prefixes()
         self.fields['current_status'].widget.attrs['readonly'] = True
         self.fields['last_edit'].widget.attrs['readonly'] = True
-        self.fields['version'].widget.attrs['readonly'] = True
+        self.fields['previous'].widget = URLwidget()
+        self.fields['previous'].widget.attrs['prefix'] = pre.map
+        print '>>>>>', self.fields['previous'].widget.attrs['prefix']
+        
         # now need to generate the 'editor', 'owners' and 'watchers' fields
         states = State()
         self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])
