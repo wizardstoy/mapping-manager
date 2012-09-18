@@ -150,11 +150,11 @@ def get_shard(shard, status, datatype):
     {
         {
         # drawing upon stash2cf.ttl as linkage
-        <%s> cf:units ?unit ;
+        ?link metExtra:origin <%s> .
+        ?link cf:units ?unit ;
                 cf:name ?cfname .
-        ?map a <%s> .
-        ?link a ?map .
-        ?link metExtra:hasPrevious ?previous ;
+        ?prov metExtra:link ?link .
+        ?prov metExtra:hasPrevious ?previous ;
                 metExtra:hasLastEdit ?last_edit .
         # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
@@ -162,15 +162,15 @@ def get_shard(shard, status, datatype):
         UNION
         {
         # drawing upon stash2cf.ttl as linkage
-        <%s> a mon:none .
-        ?map a <%s> .
-        ?link a ?map .
-        ?link metExtra:hasPrevious ?previous ;
+        ?link metExtra:origin <%s> .
+        ?link a mon:none .
+        ?prov metExtra:link ?link .
+        ?prov metExtra:hasPrevious ?previous ;
                 metExtra:hasLastEdit ?last_edit .
         BIND( URI(mon:none) as ?cfname ) .
         }
     } 
-    ''' % (shard, shard, shard, shard)
+    ''' % (shard, shard)
     results = query.run_query(qstr)
     return results
 
