@@ -23,7 +23,7 @@ import json
 
 import prefixes
 
-def run_query(query_string):
+def run_query(query_string, output='json'):
     # use null ProxyHandler to ignore proxy for localhost access
     proxy_support = ProxyHandler({})
     opener = build_opener(proxy_support)
@@ -31,17 +31,21 @@ def run_query(query_string):
     pre = prefixes.Prefixes()
     qstr = urlencode([
         ("query", "%s %s" % (pre.sparql, query_string)),
-        ("output", "json"),
-        ("stylesheet","")])
+        ("output", output),
+        ("stylesheet","/static/xml-to-html-links.xsl")])
 
     BASEURL="http://127.0.0.1:3131/metocean/query?"
-    jsondata = ''
+    data = ''
     try:
-        jsondata = opener.open(Request(BASEURL), qstr).read()
+        data = opener.open(Request(BASEURL), qstr).read()
     except URLError:
         raise Exception("Unable to contact Fuseki server on %s" % BASEURL)
-    resultslist = process_data(jsondata)
-    return resultslist
+    if output == "json":
+        return process_data(data)
+    elif output == "text":
+        return data
+    else:
+        return data
 
 def process_data(jsondata):
     resultslist = []

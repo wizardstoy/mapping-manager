@@ -19,8 +19,8 @@ class Prefixes(dict):
         'mos'      : 'http://reference.metoffice.gov.uk/data/stash/',
         'mof'      : 'http://reference.metoffice.gov.uk/data/fieldcode/',
         'mon'      : 'http://reference.metoffice.gov.uk/data/none/',
-        'map'      : 'http://reference.metoffice.gov.uk/MetOcean/mapping/',
-        'link'     : 'http://reference.metoffice.gov.uk/MetOcean/linkage/',
+        'map'      : 'http://www.metarelate.net/metOcean/mapping/',
+        'link'     : 'http://www.metarelate.net/metOcean/linkage/',
         'fcode'    : 'http://www-hc/~umdoc/pp_package_ibm_docs/fcodes/',
         'cf'       : 'http://cf-pcmdi.llnl.gov/documents/',
         }

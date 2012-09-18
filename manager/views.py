@@ -325,3 +325,26 @@ def listtype(request, status, datatype):
 def search(request):
     pass
 
+def mapdisplay(request, hashval):
+    pre = prefixes.Prefixes()
+    qstr = '''
+    SELECT DISTINCT ?previous ?owner ?watcher ?editor ?status ?last_edit ?cfunits ?cfname
+    WHERE
+    {
+        <%s%s> metExtra:hasPrevious ?previous ;
+                metExtra:hasOwner ?owner ;
+                metExtra:hasWatcher ?watcher ;
+                metExtra:hasEditor ?editor ;
+                metExtra:hasStatus ?status ;
+                metExtra:hasLastEdit ?last_edit ;
+                a ?linkage .
+         ?linkage a ?vers .
+         ?vers cf:units ?cfunits ;
+                cf:name ?cfname . 
+    } 
+    ''' % (pre.map, hashval)
+
+    results = query.run_query(qstr, output='XML')
+    return HttpResponse(results, mimetype='text/xml')
+
+

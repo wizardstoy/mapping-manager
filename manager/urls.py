@@ -31,5 +31,6 @@ urlpatterns = patterns('manager.views',
         'newshard', name='newshard'),
     url(r'^edit/(?P<status>(draft|proposed|approved|broken|deprecated))/(?P<datatype>[^/]+)/$', 
         'edit', name='edit'),
+    url(r'^map/(?P<hashval>[a-f0-9]{32})/', 'mapdisplay', name='mapdisplay'),
     url(r'^search/$', 'search', name='search'),
 )
