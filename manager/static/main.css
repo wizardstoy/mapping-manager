@@ -5,6 +5,13 @@ margin-top: 0px;
 margin-bottom: 0px;
 }
 
+.shardtable {
+border-radius:5px;
+background-color: cornsilk; 
+padding: 5px;
+margin: 5px;
+}
+
 th { text-align: right; float: right; }
 
 a { outline: none; }

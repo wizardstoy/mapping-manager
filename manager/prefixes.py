@@ -10,11 +10,12 @@ class Prefixes(dict):
     def __init__(self):
         #super(Prefixes, self).__init__()
         prefixd = {
-        'iso19135' : 'http://reference.metoffice.gov.uk/data/wmo/def/iso19135/',
-        'metExtra' : 'http://reference.metoffice.gov.uk/data/wmo/def/met/',
         'rdfs'     : 'http://www.w3.org/2000/01/rdf-schema#',
         'rdf'      : 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
         'skos'     : 'http://www.w3.org/2004/02/skos/core#',
+        'xsd'      : 'http://www.w3.org/2001/XMLSchema#',
+        'iso19135' : 'http://reference.metoffice.gov.uk/data/wmo/def/iso19135/',
+        'metExtra' : 'http://reference.metoffice.gov.uk/data/wmo/def/met/',
         'mos'      : 'http://reference.metoffice.gov.uk/data/stash/',
         'mof'      : 'http://reference.metoffice.gov.uk/data/fieldcode/',
         'mon'      : 'http://reference.metoffice.gov.uk/data/none/',

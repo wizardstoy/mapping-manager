@@ -140,7 +140,7 @@ def get_shard(shard, status, datatype):
     '''This returns the actual shard from the named graph in the triple-store.'''
     
     qstr = '''
-    SELECT DISTINCT ?previous ?cfname ?unit ?canon_unit 
+    SELECT DISTINCT ?previous ?cfname ?unit ?canon_unit ?last_edit
     WHERE
     {
         {
@@ -149,7 +149,8 @@ def get_shard(shard, status, datatype):
                 cf:name ?cfname .
         ?map a <%s> .
         ?link a ?map .
-        ?link metExtra:hasPrevious ?previous .
+        ?link metExtra:hasPrevious ?previous ;
+                metExtra:hasLastEdit ?last_edit .
         # drawing upon cf-standard-name.ttl as endpoint
         ?cfname cf:canonical_units ?canon_unit .
         }
@@ -159,7 +160,8 @@ def get_shard(shard, status, datatype):
         <%s> a mon:none .
         ?map a <%s> .
         ?link a ?map .
-        ?link metExtra:hasPrevious ?previous .
+        ?link metExtra:hasPrevious ?previous ;
+                metExtra:hasLastEdit ?last_edit .
         BIND( URI(mon:none) as ?cfname ) .
         }
     } 

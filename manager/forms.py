@@ -35,6 +35,9 @@ class URLwidget(forms.TextInput):
             tpl = u'<a href="%s%s">%s</a>' % (prefix, value, value)
         return mark_safe(tpl)
 
+    def clean(self):
+        return self.cleaned_data
+
 class BulkLoadForm(forms.Form):
     file = forms.FileField(
         label = 'Select a CSV file to upload',
@@ -86,7 +89,7 @@ class ProvenanceForm(forms.ModelForm):
         self.fields['last_edit'].widget.attrs['readonly'] = True
         self.fields['previous'].widget = URLwidget()
         self.fields['previous'].widget.attrs['prefix'] = pre.map
-        print '>>>>>', self.fields['previous'].widget.attrs['prefix']
+        self.fields['previous'].required = False
         
         # now need to generate the 'editor', 'owners' and 'watchers' fields
         states = State()

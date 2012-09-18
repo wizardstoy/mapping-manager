@@ -109,7 +109,7 @@ class Provenance(BaseShard):
     reason = models.CharField(max_length=50)
     owners = models.ManyToManyField(Contacts, 
         through='ProvenanceContacts')
-    previous = models.CharField(max_length=32) 
+    previous = models.CharField(max_length=32)
 
 
 class ProvenanceContacts(models.Model):
