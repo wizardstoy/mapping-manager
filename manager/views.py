@@ -98,7 +98,7 @@ def edit(request, status, datatype):
     if request.method == 'POST':
         formset = ShardFormSet(request.POST)
         if formset.is_valid():
-            pass
+            process_formset(formset)
         else:
             print formset.errors
     else:
@@ -106,7 +106,8 @@ def edit(request, status, datatype):
         if len(ushardm) > 1:
             warning_msg = (
                 'Warning: '
-                'More than one Data Shard with the same name at status "%s" found.' % status.upper())
+                '%s Data Shards with the same name at status "%s" found.' % (
+                    len(ushardm), status.upper()))
         initial_data_set = []
         for item in ushardm:
             data_set = {}
@@ -134,6 +135,10 @@ def edit(request, status, datatype):
             'read_only' : READ_ONLY,
             'error' : warning_msg,
             }) )
+
+def process_formset(formset):
+    for form in formset:
+        print '>>>>', form.cleaned_data
 
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):

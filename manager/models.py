@@ -102,7 +102,7 @@ class Contacts(models.Model):
 
 class Provenance(BaseShard):
     provenanceMD5 = models.CharField(max_length=32) 
-    last_edit = models.DateTimeField()
+    last_edit = models.CharField(max_length=50)
     current_status = models.CharField(max_length=15)
     version = models.CharField(max_length=20)
     comment = models.CharField(max_length=200)

@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with metOcean-mapping. If not, see <http://www.gnu.org/licenses/>.
 
+import datetime
+import time
+import sys
 
 from models import BaseShard, State, Provenance
 
@@ -25,6 +28,8 @@ from settings import READ_ONLY
 from django import forms
 from string import Template
 from django.utils.safestring import mark_safe
+from django.utils import formats
+
 
 class URLwidget(forms.TextInput):
     def render(self, name, value, attrs=None):
@@ -43,7 +48,6 @@ class BulkLoadForm(forms.Form):
         label = 'Select a CSV file to upload',
         help_text = 'maximum size 2MB',
         required=False) 
-
 
 class ShardForm(forms.ModelForm):
     class Meta:
@@ -71,6 +75,7 @@ class ShardForm(forms.ModelForm):
 class ProvenanceForm(forms.ModelForm):
     required_css_class = 'required'
     error_css_class = 'error'
+    isoformat = ("%Y-%m-%dT%H:%M:%S.%f",)
     class Meta:
         model = Provenance
         exclude = ('provenanceMD5', 'baseshardMD5', 'owners', 'version' )
@@ -87,6 +92,7 @@ class ProvenanceForm(forms.ModelForm):
         pre = prefixes.Prefixes()
         self.fields['current_status'].widget.attrs['readonly'] = True
         self.fields['last_edit'].widget.attrs['readonly'] = True
+        self.fields['last_edit'].required = False
         self.fields['previous'].widget = URLwidget()
         self.fields['previous'].widget.attrs['prefix'] = pre.map
         self.fields['previous'].required = False
@@ -94,4 +100,15 @@ class ProvenanceForm(forms.ModelForm):
         # now need to generate the 'editor', 'owners' and 'watchers' fields
         states = State()
         self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])
+
+    def clean_last_edit(self):
+        data = self.cleaned_data.get('last_edit')
+        for format in self.isoformat:
+            print '6>>>>', data
+            try:
+                return str(datetime.datetime(*time.strptime(str(data), format)[:6]))
+            except ValueError:
+                print sys.exc_info()[1]
+                continue
+        raise forms.ValidationError("ISO DateTime format")
 
