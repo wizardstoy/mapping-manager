@@ -148,29 +148,24 @@ def get_shard(shard, status, datatype):
     SELECT DISTINCT ?previous ?cfname ?unit ?canon_unit ?last_edit
     WHERE
     {
-        {
         # drawing upon stash2cf.ttl as linkage
         ?link metExtra:origin <%s> .
-        ?link cf:units ?unit ;
-                cf:name ?cfname .
         ?prov metExtra:link ?link .
         ?prov metExtra:hasPrevious ?previous ;
                 metExtra:hasLastEdit ?last_edit .
-        # drawing upon cf-standard-name.ttl as endpoint
-        ?cfname cf:canonical_units ?canon_unit .
+        ?link cf:units ?unit .
+        {
+            # drawing upon cf-standard-name.ttl as endpoint
+            ?link cf:name ?cfname .
+            ?cfname cf:canonical_units ?canon_unit .
         }
         UNION
         {
-        # drawing upon stash2cf.ttl as linkage
-        ?link metExtra:origin <%s> .
-        ?link a mon:none .
-        ?prov metExtra:link ?link .
-        ?prov metExtra:hasPrevious ?previous ;
-                metExtra:hasLastEdit ?last_edit .
-        BIND( URI(mon:none) as ?cfname ) .
+            ?link a mon:none .
+            BIND( URI(mon:none) as ?cfname ) .
         }
     } 
-    ''' % (shard, shard)
+    ''' % (shard,)
     results = query.run_query(qstr)
     return results
 
@@ -331,7 +326,6 @@ def mapdisplay(request, hashval):
     SELECT DISTINCT ?previous ?owner ?watcher ?editor ?status ?last_edit ?cfunits ?cfname
     WHERE
     {   
-        {
         <%s%s> metExtra:hasPrevious ?previous ;
                 metExtra:hasOwner ?owner ;
                 metExtra:hasWatcher ?watcher ;
@@ -339,26 +333,18 @@ def mapdisplay(request, hashval):
                 metExtra:hasStatus ?status ;
                 metExtra:hasLastEdit ?last_edit ;
                 metExtra:link ?linkage .
-         ?linkage metExtra:origin ?vers ;
-                cf:units ?cfunits ;
-                cf:name ?cfname .
+        ?linkage metExtra:origin ?vers ;
+                cf:units ?cfunits .
+        {
+            ?linkage cf:name ?cfname .
         }
         UNION
         {
-        <%s%s> metExtra:hasPrevious ?previous ;
-                metExtra:hasOwner ?owner ;
-                metExtra:hasWatcher ?watcher ;
-                metExtra:hasEditor ?editor ;
-                metExtra:hasStatus ?status ;
-                metExtra:hasLastEdit ?last_edit ;
-                metExtra:link ?linkage .
-         ?linkage metExtra:origin ?vers ;
-                cf:units ?cfunits ;
-                a mon:none .
-         BIND( URI(mon:none) as ?cfname ) .
+            ?linkage a mon:none .
+            BIND( URI(mon:none) as ?cfname ) .
         } 
     } 
-    ''' % (pre.map, hashval, pre.map, hashval)
+    ''' % (pre.map, hashval)
 
     results = query.run_query(qstr, output='xml')
     return HttpResponse(results, mimetype='text/xml')
