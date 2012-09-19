@@ -138,7 +138,7 @@ def edit(request, status, datatype):
 
 def process_formset(formset):
     for form in formset:
-        print '>>>>', form.cleaned_data
+        print '7>>>>', form.cleaned_data
 
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):
@@ -330,21 +330,37 @@ def mapdisplay(request, hashval):
     qstr = '''
     SELECT DISTINCT ?previous ?owner ?watcher ?editor ?status ?last_edit ?cfunits ?cfname
     WHERE
-    {
+    {   
+        {
         <%s%s> metExtra:hasPrevious ?previous ;
                 metExtra:hasOwner ?owner ;
                 metExtra:hasWatcher ?watcher ;
                 metExtra:hasEditor ?editor ;
                 metExtra:hasStatus ?status ;
                 metExtra:hasLastEdit ?last_edit ;
-                a ?linkage .
-         ?linkage a ?vers .
-         ?vers cf:units ?cfunits ;
-                cf:name ?cfname . 
+                metExtra:link ?linkage .
+         ?linkage metExtra:origin ?vers ;
+                cf:units ?cfunits ;
+                cf:name ?cfname .
+        }
+        UNION
+        {
+        <%s%s> metExtra:hasPrevious ?previous ;
+                metExtra:hasOwner ?owner ;
+                metExtra:hasWatcher ?watcher ;
+                metExtra:hasEditor ?editor ;
+                metExtra:hasStatus ?status ;
+                metExtra:hasLastEdit ?last_edit ;
+                metExtra:link ?linkage .
+         ?linkage metExtra:origin ?vers ;
+                cf:units ?cfunits ;
+                a mon:none .
+         BIND( URI(mon:none) as ?cfname ) .
+        } 
     } 
-    ''' % (pre.map, hashval)
+    ''' % (pre.map, hashval, pre.map, hashval)
 
-    results = query.run_query(qstr, output='XML')
+    results = query.run_query(qstr, output='xml')
     return HttpResponse(results, mimetype='text/xml')
 
 
