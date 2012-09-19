@@ -104,11 +104,9 @@ class ProvenanceForm(forms.ModelForm):
     def clean_last_edit(self):
         data = self.cleaned_data.get('last_edit')
         for format in self.isoformat:
-            print '6>>>>', data
             try:
                 return str(datetime.datetime(*time.strptime(str(data), format)[:6]))
             except ValueError:
-                print sys.exc_info()[1]
                 continue
-        raise forms.ValidationError("ISO DateTime format")
+        raise forms.ValidationError("Invalid ISO DateTime format")
 
