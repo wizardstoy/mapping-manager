@@ -321,9 +321,25 @@ def search(request):
     pass
 
 def mapdisplay(request, hashval):
+    '''Direct access to a Provenance and Mapping shard.
+    Returns raw XML but uses an XSL file to pretty-display for HTML browsers.
+    '''
+    
     pre = prefixes.Prefixes()
     qstr = '''
-    SELECT DISTINCT ?previous ?owner ?watcher ?editor ?status ?last_edit ?cfunits ?cfname
+    CONSTRUCT 
+    {
+        <%s%s> metExtra:hasPrevious ?previous ;
+                metExtra:hasOwner ?owner ;
+                metExtra:hasWatcher ?watcher ;
+                metExtra:hasEditor ?editor ;
+                metExtra:hasStatus ?status ;
+                metExtra:hasLastEdit ?last_edit ;
+                metExtra:link ?linkage .
+        ?linkage metExtra:origin ?vers ;
+                cf:units ?cfunits .
+        ?linkage cf:name ?cfname . 
+    }
     WHERE
     {   
         <%s%s> metExtra:hasPrevious ?previous ;
@@ -344,8 +360,8 @@ def mapdisplay(request, hashval):
             BIND( URI(mon:none) as ?cfname ) .
         } 
     } 
-    ''' % (pre.map, hashval)
-
+    ''' % (pre.map, hashval, pre.map, hashval)
+    
     results = query.run_query(qstr, output='xml')
     return HttpResponse(results, mimetype='text/xml')
 
