@@ -101,6 +101,12 @@ class ProvenanceForm(forms.ModelForm):
         states = State()
         self.fields['next_status'] = forms.ChoiceField(choices=[(x,x) for x in states.get_states])
 
+    def clean(self):
+        if READ_ONLY:
+            raise ValidationError('System in Read-Only mode') 
+        else:
+            return self.cleaned_data
+
     def clean_last_edit(self):
         data = self.cleaned_data.get('last_edit')
         for format in self.isoformat:
