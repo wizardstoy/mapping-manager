@@ -322,7 +322,7 @@ def search(request):
 
 def mapdisplay(request, hashval):
     '''Direct access to a Provenance and Mapping shard.
-    Returns raw XML but uses an XSL file to pretty-display for HTML browsers.
+    Returns RDF but requires the correct mimetype to be set.
     '''
     
     pre = prefixes.Prefixes()
