@@ -153,16 +153,11 @@ def get_shard(shard, status, datatype):
         ?prov metExtra:link ?link .
         ?prov metExtra:hasPrevious ?previous ;
                 metExtra:hasLastEdit ?last_edit .
-        ?link cf:units ?unit .
-        {
+        ?link cf:units ?unit ;
+              cf:name ?cfname .
+        OPTIONAL {
             # drawing upon cf-standard-name.ttl as endpoint
-            ?link cf:name ?cfname .
             ?cfname cf:canonical_units ?canon_unit .
-        }
-        UNION
-        {
-            ?link a mon:none .
-            BIND( URI(mon:none) as ?cfname ) .
         }
     } 
     ''' % (shard,)
@@ -350,15 +345,8 @@ def mapdisplay(request, hashval):
                 metExtra:hasLastEdit ?last_edit ;
                 metExtra:link ?linkage .
         ?linkage metExtra:origin ?vers ;
-                cf:units ?cfunits .
-        {
-            ?linkage cf:name ?cfname .
-        }
-        UNION
-        {
-            ?linkage a mon:none .
-            BIND( URI(mon:none) as ?cfname ) .
-        } 
+                cf:units ?cfunits ;
+                cf:name ?cfname .
     } 
     ''' % (pre.map, hashval, pre.map, hashval)
     
