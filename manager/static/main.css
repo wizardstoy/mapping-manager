@@ -5,6 +5,24 @@ margin-top: 0px;
 margin-bottom: 0px;
 }
 
+.shardtable, .shardbutton {
+border: 1px solid black;
+border-radius:5px;
+background-color: cornsilk; 
+padding: 5px;
+margin-left: 5px;
+margin-right: 5px;
+margin-bottom: 5px;
+margin-top: 0px;
+}
+
+.shardbutton {
+border: 2px solid blue;
+}
+.shardbutton:hover {
+background-color: lightblue;
+}
+
 th { text-align: right; float: right; }
 
 a { outline: none; }

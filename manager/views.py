@@ -24,6 +24,7 @@ import re
 import urllib
 from itertools import groupby
 import datetime
+import hashlib
 
 import forms
 import models
@@ -98,7 +99,11 @@ def edit(request, status, datatype):
     if request.method == 'POST':
         formset = ShardFormSet(request.POST)
         if formset.is_valid():
-            pass
+            process_formset(formset, shard, status, datatype)
+            return HttpResponseRedirect(
+                url_with_querystring(
+                    reverse('edit', kwargs={'status' : status, 'datatype' : datatype}),
+                    ref=shard))
         else:
             print formset.errors
     else:
@@ -106,18 +111,26 @@ def edit(request, status, datatype):
         if len(ushardm) > 1:
             warning_msg = (
                 'Warning: '
-                'More than one Data Shard with the same name at status "%s" found.' % status.upper())
+                '%s Data Shards with the same name at status "%s" found.' % (
+                    len(ushardm), status.upper()))
         initial_data_set = []
         for item in ushardm:
             data_set = {}
+            previousurl = item.get('previous')
+            previouslabel = previousurl.split('/')[-1]
             data_set = dict(
+                provenanceMD5 = item.get('prov').split('/')[-1],
+                baseshardMD5 = item.get('link').split('/')[-1],
                 metadata_element = md_element,
                 local_name = localname,
-                current_status = state,
+                current_status = item.get('status'),
                 standard_name = item.get('cfname'),
                 unit = item.get('unit'),
-                long_name = '',
-                last_edit = item.get('last_edit') or datetime.datetime.now()
+                long_name = item.get('long_name'),
+                comment = item.get('comment'),
+                reason = item.get('reason'),
+                last_edit = item.get('last_edit'),
+                previous = mark_safe("%s" % previouslabel)
                 )
             initial_data_set.append(data_set)
         formset = ShardFormSet(initial=initial_data_set)
@@ -132,29 +145,121 @@ def edit(request, status, datatype):
             'error' : warning_msg,
             }) )
 
+def process_formset(formset, shard, status, datatype):
+    pre = prefixes.Prefixes()
+
+    globalDateTime = datetime.datetime.now().isoformat()
+    for form in formset:
+        data = form.cleaned_data
+
+        mmd5 = hashlib.md5()
+        origin = shard
+        mmd5.update(origin)
+        mmd5.update(data.get('unit'))
+        mmd5.update(data.get('standard_name'))
+
+        provMD5 = hashlib.md5()
+        linkage = '%s%s' % (pre.link, str(mmd5.hexdigest()))
+        provMD5.update(data.get('owner', 'None'))
+        provMD5.update(data.get('watcher', 'None'))
+        provMD5.update(data.get('editor', 'None'))
+        provMD5.update(data.get('next_status'))
+        hasPrevious = '%s%s' % (pre.map, data.get('provenanceMD5')) 
+        provMD5.update(hasPrevious)
+        provMD5.update(data.get('comment'))
+        provMD5.update(data.get('reason'))
+        provMD5.update(linkage)
+
+        deleteDataStr = '''
+            <%s> a iso19135:RegisterItem ;
+                metExtra:origin <%s> ;
+                cf:units "%s" ;
+                cf:name <%s> .
+        ''' % (
+            linkage,
+            origin,
+            data.get('unit'),
+            data.get('standard_name')
+        )
+
+        insertDataStr = '''
+            <%s> a iso19135:RegisterItem ;
+                metExtra:origin <%s> ;
+                cf:units "%s" ;
+                cf:name <%s> .
+        ''' % (
+            linkage,
+            origin,
+            data.get('unit'),
+            data.get('standard_name')
+        )
+
+        insertProvStr = '''
+            <%s> a iso19135:RegisterItem ;
+                metExtra:hasOwner     "%s" ;
+                metExtra:hasWatcher   "%s" ;
+                metExtra:hasEditor    "%s" ;
+                metExtra:hasStatus    "%s" ;
+                metExtra:hasPrevious  <%s> ;
+                metExtra:hasLastEdit  "%s" ;
+                metExtra:hasComment   "%s" ;
+                metExtra:hasReason    "%s" ;
+                metExtra:link         <%s> .
+        ''' % (
+            '%s%s' % (pre.map, str(provMD5.hexdigest())),
+            data.get('owner', 'None'),
+            data.get('watcher', 'None'),
+            data.get('editor', 'None'),
+            data.get('next_status'),
+            hasPrevious,
+            datetime.datetime.now().isoformat(), # hasLastEdit updated with current time
+            data.get('comment'),
+            data.get('reason'),
+            linkage
+        )
+
+        qstr = '''
+        DELETE DATA {
+            %s
+        }
+        INSERT DATA {
+            %s
+            %s
+        }
+        ''' % (deleteDataStr, insertDataStr, insertProvStr)
+
+        print '12>>>>', qstr
+
+        results = query.run_query(qstr, update=True)
+        print '13>>>>', results
+
+        
+
 # what shall we do here for multiple cfnames?
 def get_shard(shard, status, datatype):
     '''This returns the actual shard from the named graph in the triple-store.'''
     
     qstr = '''
-    SELECT DISTINCT ?cfname ?unit ?canon_unit 
+    SELECT DISTINCT ?previous ?cfname ?unit ?canon_unit ?last_edit ?long_name ?comment ?reason ?status ?prov ?link
     WHERE
     {
-        {
         # drawing upon stash2cf.ttl as linkage
-        <%s> cf:units ?unit ;
-                cf:name ?cfname .
-        # drawing upon cf-standard-name.ttl as endpoint
-        ?cfname cf:canonical_units ?canon_unit .
-        }
-        UNION
-        {
-        # drawing upon stash2cf.ttl as linkage
-        <%s> a mon:none .
-        BIND( URI(mon:none) as ?cfname ) .
+        ?link metExtra:origin <%s> ;
+              metExtra:long_name ?long_name ;
+              cf:units ?unit ;
+              cf:name ?cfname .
+        ?prov metExtra:link ?link .
+        ?prov metExtra:hasPrevious ?previous ;
+                metExtra:hasLastEdit ?last_edit ;
+                metExtra:hasComment ?comment ;
+                metExtra:hasStatus ?status ;
+                metExtra:hasReason ?reason .
+        OPTIONAL {
+            # drawing upon cf-standard-name.ttl as endpoint
+            ?cfname cf:canonical_units ?canon_unit .
         }
     } 
-    ''' % (shard, shard)
+    ''' % (shard,)
     results = query.run_query(qstr)
     return results
 
@@ -308,4 +413,49 @@ def listtype(request, status, datatype):
 
 def search(request):
     pass
+
+def mapdisplay(request, hashval):
+    '''Direct access to a Provenance and Mapping shard.
+    Returns RDF but requires the correct mimetype to be set.
+    '''
+    
+    pre = prefixes.Prefixes()
+    qstr = '''
+    CONSTRUCT 
+    {
+        <%s%s> metExtra:hasPrevious ?previous ;
+                metExtra:hasOwner ?owner ;
+                metExtra:hasWatcher ?watcher ;
+                metExtra:hasEditor ?editor ;
+                metExtra:hasStatus ?status ;
+                metExtra:hasComment ?comment ;
+                metExtra:hasReason ?reason ;
+                metExtra:hasLastEdit ?last_edit ;
+                metExtra:link ?linkage .
+        ?linkage metExtra:origin ?vers ;
+                metExtra:long_name ?long_name ;
+                cf:units ?cfunits ;
+                cf:name ?cfname . 
+    }
+    WHERE
+    {   
+        <%s%s> metExtra:hasPrevious ?previous ;
+                metExtra:hasOwner ?owner ;
+                metExtra:hasWatcher ?watcher ;
+                metExtra:hasEditor ?editor ;
+                metExtra:hasStatus ?status ;
+                metExtra:hasComment ?comment ;
+                metExtra:hasReason ?reason ;
+                metExtra:hasLastEdit ?last_edit ;
+                metExtra:link ?linkage .
+        ?linkage metExtra:origin ?vers ;
+                metExtra:long_name ?long_name ;
+                cf:units ?cfunits ;
+                cf:name ?cfname .
+    } 
+    ''' % (pre.map, hashval, pre.map, hashval)
+    
+    results = query.run_query(qstr, output='xml')
+    return HttpResponse(results, mimetype='text/xml')
+
 

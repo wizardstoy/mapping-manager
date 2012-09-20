@@ -67,14 +67,13 @@ $(document).ready(function(){
 {% if formset %}
 
 <form action="" method="post">
+<input class="shardbutton" type="submit" {% if read_only %}disabled="disabled"{% endif %} value="Submit Changes"/>
 {% for form in formset %}
 {% csrf_token %}
 {{ formset.management_form }}
-<table>
+<table class="shardtable">
 {{ form.as_table }}
 </table>
-<input type="submit" {% if read_only %}disabled="disabled"{% endif %} value="Submit"/>
-<br />
 {% endfor %}
 
 </form>
