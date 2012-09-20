@@ -29,15 +29,16 @@ from django import forms
 from string import Template
 from django.utils.safestring import mark_safe
 from django.utils import formats
+from django.core.urlresolvers import reverse
 
 
 class URLwidget(forms.TextInput):
     def render(self, name, value, attrs=None):
-        prefix = self.attrs.get('prefix', '')
         if value in ('None', None):
             tpl = value
         else:
-            tpl = u'<a href="%s%s">%s</a>' % (prefix, value, value)
+            tpl = u'<a href="%s">%s</a>' % (reverse('mapdisplay', 
+                kwargs={'hashval' : value}), "go to previous")
         return mark_safe(tpl)
 
     def clean(self):
@@ -78,7 +79,8 @@ class ProvenanceForm(forms.ModelForm):
     isoformat = ("%Y-%m-%dT%H:%M:%S.%f",)
     class Meta:
         model = Provenance
-        exclude = ('provenanceMD5', 'baseshardMD5', 'owners', 'version' )
+        # exclude = ('provenanceMD5', 'baseshardMD5', 'owners', 'version' )
+        exclude = ('owners', 'version')
         widgets = {
             'standard_name' : forms.TextInput(attrs={'size' : 60}),
             'local_name' : forms.TextInput(attrs={'size' : 60}),
@@ -94,8 +96,9 @@ class ProvenanceForm(forms.ModelForm):
         self.fields['last_edit'].widget.attrs['readonly'] = True
         self.fields['last_edit'].required = False
         self.fields['previous'].widget = URLwidget()
-        self.fields['previous'].widget.attrs['prefix'] = pre.map
         self.fields['previous'].required = False
+        self.fields['provenanceMD5'].widget = forms.HiddenInput()
+        self.fields['baseshardMD5'].widget = forms.HiddenInput()
         
         # now need to generate the 'editor', 'owners' and 'watchers' fields
         states = State()
