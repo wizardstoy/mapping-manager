@@ -9,10 +9,11 @@ Welcome to mapping-manager's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   views
-   forms
+    views
+    forms
+    models
 
 Indices and tables
 ==================

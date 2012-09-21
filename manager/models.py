@@ -23,6 +23,8 @@ from django.db import models
 # Create your models here.
 
 class State(object):
+    '''Represents the known (and allowed) states within the operational model.'''
+
     STATES = (
         'Draft',
         'Proposed',
@@ -49,6 +51,8 @@ class State(object):
         return self.STATES
 
 class StateTransition(object):
+    '''Represents the allowable transitions between states within the operational model.'''
+
     fromstate = None
     tostate = None
     transition_date = None
@@ -73,7 +77,9 @@ class StateTransition(object):
     
 
 class BaseShard(models.Model):
-    '''represents the linkage between Standard Name and a sub-classed RDF type'''
+    '''represents the linkage between Standard Name and a shard of given datatype
+    represented by metadata_element.
+    '''
     baseshardMD5 = models.CharField(max_length=32) 
     metadata_element = models.CharField(
         null=True, blank=True, 
@@ -101,6 +107,9 @@ class Contacts(models.Model):
             self.name, 'Watcher' if self.watcher else 'Owner', self.email)
 
 class Provenance(BaseShard):
+    '''This inherits from BaseShard to cover the possibility that specialisation
+    might required in the future for further shard types.
+    '''
     provenanceMD5 = models.CharField(max_length=32) 
     last_edit = models.CharField(max_length=50)
     current_status = models.CharField(max_length=15)
