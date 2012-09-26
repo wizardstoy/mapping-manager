@@ -187,7 +187,7 @@ def process_formset(formset, shard, status, datatype):
                 metExtra:origin <%s> ;
                 cf:units "%s" ;
                 cf:name <%s> ;
-                mapman:saveCache "True" .
+                metExtra:saveCache "True" .
         ''' % (
             linkage,
             origin,
